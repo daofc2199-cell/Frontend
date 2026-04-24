@@ -1,87 +1,37 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-
-const app = express();
-
-// ─── Middleware ───────────────────────────────────────────────
-app.use(cors({ origin: 'http://localhost:4200' })); // Angular dev server
-app.use(express.json());
-
-// ─── MongoDB Connection ───────────────────────────────────────
-const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://<USER>:<PASS>@cluster0.uj2f0hr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-
-const connectDB = async () => {
-  try {
-    await mongoose.connect(mongoURI);
-    console.log('✅ MongoDB Connected');
-  } catch (error) {
-    console.error('❌ MongoDB Connection Error:', error);
-    process.exit(1);
-  }
-};
-
-// ─── Todo Schema & Model ──────────────────────────────────────
-const todoSchema = new mongoose.Schema(
-  {
-    title: { type: String, required: true, trim: true },
-    completed: { type: Boolean, default: false },
+{
+  "name": "todoapp",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "build": "ng build --configuration production",
+    "start": "ng serve",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "serve:ssr:TODOapp": "node dist/TODOapp/server/server.mjs"
   },
-  { timestamps: true }
-);
-
-const Todo = mongoose.model('Todo', todoSchema);
-
-// ─── Routes ───────────────────────────────────────────────────
-
-// GET /api/todos — listar todos
-app.get('/api/todos', async (req, res) => {
-  try {
-    const todos = await Todo.find().sort({ createdAt: -1 });
-    res.json(todos);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  "private": true,
+  "packageManager": "npm@11.9.0",
+  "dependencies": {
+    "@angular/animations": "^18.2.0",
+    "@angular/common": "^18.2.0",
+    "@angular/compiler": "^18.2.0",
+    "@angular/core": "^18.2.0",
+    "@angular/forms": "^18.2.0",
+    "@angular/platform-browser": "^18.2.0",
+    "@angular/platform-browser-dynamic": "^18.2.0",
+    "@angular/router": "^18.2.0",
+    "angular-cli": "^0.1.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "~0.14.0",
+    "canvas-confetti": "^1.9.3"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^18.2.0",
+    "@angular/cli": "^18.2.0",
+    "@angular/compiler-cli": "^18.2.0",
+    "@types/node": "^18.19.0",
+    "@types/canvas-confetti": "^1.6.4",
+    "typescript": "~5.5.0"
   }
-});
-
-// POST /api/todos — criar
-app.post('/api/todos', async (req, res) => {
-  try {
-    const todo = new Todo({ title: req.body.title });
-    const saved = await todo.save();
-    res.status(201).json(saved);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-// PATCH /api/todos/:id — atualizar (toggle ou editar título)
-app.patch('/api/todos/:id', async (req, res) => {
-  try {
-    const todo = await Todo.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    if (!todo) return res.status(404).json({ message: 'Todo não encontrado' });
-    res.json(todo);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-// DELETE /api/todos/:id — deletar
-app.delete('/api/todos/:id', async (req, res) => {
-  try {
-    const todo = await Todo.findByIdAndDelete(req.params.id);
-    if (!todo) return res.status(404).json({ message: 'Todo não encontrado' });
-    res.json({ message: 'Deletado com sucesso' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// ─── Start ────────────────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
-connectDB().then(() => {
-  app.listen(PORT, () => console.log(`🚀 Server rodando em http://localhost:${PORT}`));
-});
+}

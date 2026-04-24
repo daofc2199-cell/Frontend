@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, ViewChild, ElementRef } from '@angular/core';
 import { Tarefa } from "./tarefa";
 import { HttpClient } from '@angular/common/http';
 
@@ -8,48 +8,80 @@ import { HttpClient } from '@angular/common/http';
   standalone: false,
   styleUrl: './app.css'
 })
+
 export class App {
   protected readonly title = signal('TODOapp');
+  @ViewChild('campoNovoItem') campoNovoItem!: ElementRef<HTMLInputElement>;
 
   arrayDeTarefas = signal<Tarefa[]>([]);
   apiURL: string;
 
-
-
   constructor(private http: HttpClient) {
-    this.apiURL = 'http://localhost:3000';
+    this.apiURL = 'https://passionate-simplicity-production-0313.up.railway.app';
     this.READ_tarefas();
   }
 
-  CREATE_tarefa(descricaoNovaTarefa: string) {
-    var novaTarefa = new Tarefa(descricaoNovaTarefa, false);
-    this.http.post<Tarefa>(`${this.apiURL}/api/post`, novaTarefa).subscribe(
-      resultado => { console.log(resultado); this.READ_tarefas(); });
+  READ_tarefas() {
+    this.http.get<Tarefa[]>(`${this.apiURL}/api/getAll`).subscribe({
+      next: (resultado) => {
+        console.log('Tarefas carregadas:', resultado);
+        this.arrayDeTarefas.set(resultado);
+      },
+      error: (erro) => {
+        console.error('Erro ao carregar tarefas:', erro);
+      }
+    });
   }
 
-  READ_tarefas() {
-    this.http.get<Tarefa[]>(`${this.apiURL}/api/getAll`).subscribe(
-      resultado => this.arrayDeTarefas.set(resultado));
+  CREATE_tarefa(descricao: string) {
+    if (!descricao || descricao.trim() === '') {
+      console.warn('Descrição vazia');
+      return;
+    }
 
+    const novaTarefa = new Tarefa(descricao, false);
+    
+    this.http.post<Tarefa>(`${this.apiURL}/api/post`, novaTarefa).subscribe({
+      next: (resultado) => {
+        console.log('Tarefa criada:', resultado);
+        this.READ_tarefas();
+        if (this.campoNovoItem) {
+          this.campoNovoItem.nativeElement.value = '';
+        }
+      },
+      error: (erro) => {
+        console.error('Erro ao criar tarefa:', erro);
+      }
+    });
   }
 
   DELETE_tarefa(tarefaAserRemovida: Tarefa) {
-    var indice = this.arrayDeTarefas().indexOf(tarefaAserRemovida);
-    var id = this.arrayDeTarefas()[indice]._id;
-    this.http.delete<Tarefa>(`${this.apiURL}/api/delete/${id}`).subscribe(
-      resultado => { console.log(resultado); this.READ_tarefas(); });
-
+    const id = tarefaAserRemovida._id;
+    console.log('Deletando tarefa com ID:', id);
+    
+    this.http.delete(`${this.apiURL}/api/delete/${id}`).subscribe({
+      next: (resultado) => {
+        console.log('Deletado com sucesso:', resultado);
+        this.READ_tarefas();
+      },
+      error: (erro) => {
+        console.error('Erro ao deletar:', erro);
+      }
+    });
   }
 
   UPDATE_tarefa(tarefaAserModificada: Tarefa) {
-    var indice = this.arrayDeTarefas().indexOf(tarefaAserModificada);
-    var id = this.arrayDeTarefas()[indice]._id;
-    this.http.patch<Tarefa>(`${this.apiURL}/api/update/${id}`,
-      tarefaAserModificada).subscribe(
-        resultado => { console.log(resultado); this.READ_tarefas(); });
+    const id = tarefaAserModificada._id;
+    console.log('Atualizando tarefa com ID:', id);
+    
+    this.http.patch(`${this.apiURL}/api/update/${id}`, tarefaAserModificada).subscribe({
+      next: (resultado) => {
+        console.log('Atualizado com sucesso:', resultado);
+        this.READ_tarefas();
+      },
+      error: (erro) => {
+        console.error('Erro ao atualizar:', erro);
+      }
+    });
   }
-
-
 }
-
-

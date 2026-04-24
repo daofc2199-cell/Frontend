@@ -11,19 +11,28 @@ export class Item {
   emEdicao = false;
   mostrarmodal = false;
   @Input() tarefa: Tarefa = new Tarefa("", false);
-  @Output() removeTarefa = new EventEmitter();
+  @Output() remover = new EventEmitter<Tarefa>();
   @Output() modificaTarefa = new EventEmitter();
 
   abrirModalExclusao() {
     this.mostrarmodal = true;
-  } 
+  }
 
   cancelarExclusao() {
     this.mostrarmodal = false;
-    this.removeTarefa.emit(this.tarefa);
+  }
+
+  confirmarExclusao() {
+    this.mostrarmodal = false;
+    this.remover.emit(this.tarefa);
   }
 
   onRemover() {
-    this.removeTarefa.emit(this.tarefa);
+    this.abrirModalExclusao();
+  }
+
+  toggleComplete() {
+    this.tarefa.completed = !this.tarefa.completed;
+    this.modificaTarefa.emit(this.tarefa);
   }
 }
