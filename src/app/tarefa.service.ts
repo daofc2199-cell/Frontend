@@ -7,7 +7,7 @@ import { Tarefa } from './tarefa';
   providedIn: 'root'
 })
 export class TarefaService {
-  private apiURL = 'https://passionate-simplicity-production-0313.up.railway.app'; // URL do seu backend
+  private apiURL = 'https://apibackend-production-8a24.up.railway.app'; 
 
   constructor(private http: HttpClient) {}
 
