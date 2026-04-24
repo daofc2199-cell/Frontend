@@ -1,0 +1,87 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+
+const app = express();
+
+// ─── Middleware ───────────────────────────────────────────────
+app.use(cors({ origin: 'http://localhost:4200' })); // Angular dev server
+app.use(express.json());
+
+// ─── MongoDB Connection ───────────────────────────────────────
+const mongoURI = process.env.MONGODB_URI || 'mongodb+srv://<USER>:<PASS>@cluster0.uj2f0hr.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+
+const connectDB = async () => {
+  try {
+    await mongoose.connect(mongoURI);
+    console.log('✅ MongoDB Connected');
+  } catch (error) {
+    console.error('❌ MongoDB Connection Error:', error);
+    process.exit(1);
+  }
+};
+
+// ─── Todo Schema & Model ──────────────────────────────────────
+const todoSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    completed: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
+
+const Todo = mongoose.model('Todo', todoSchema);
+
+// ─── Routes ───────────────────────────────────────────────────
+
+// GET /api/todos — listar todos
+app.get('/api/todos', async (req, res) => {
+  try {
+    const todos = await Todo.find().sort({ createdAt: -1 });
+    res.json(todos);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/todos — criar
+app.post('/api/todos', async (req, res) => {
+  try {
+    const todo = new Todo({ title: req.body.title });
+    const saved = await todo.save();
+    res.status(201).json(saved);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// PATCH /api/todos/:id — atualizar (toggle ou editar título)
+app.patch('/api/todos/:id', async (req, res) => {
+  try {
+    const todo = await Todo.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!todo) return res.status(404).json({ message: 'Todo não encontrado' });
+    res.json(todo);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// DELETE /api/todos/:id — deletar
+app.delete('/api/todos/:id', async (req, res) => {
+  try {
+    const todo = await Todo.findByIdAndDelete(req.params.id);
+    if (!todo) return res.status(404).json({ message: 'Todo não encontrado' });
+    res.json({ message: 'Deletado com sucesso' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─── Start ────────────────────────────────────────────────────
+const PORT = process.env.PORT || 3000;
+connectDB().then(() => {
+  app.listen(PORT, () => console.log(`🚀 Server rodando em http://localhost:${PORT}`));
+});
