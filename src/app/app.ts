@@ -17,7 +17,7 @@ export class App {
   apiURL: string;
 
   constructor(private http: HttpClient) {
-    this.apiURL = 'https://apibackend-production-8a24.up.railway.app';
+    this.apiURL = 'https://apiterefasgustavo252237.up.railway.app';
     this.READ_tarefas();
   }
 
